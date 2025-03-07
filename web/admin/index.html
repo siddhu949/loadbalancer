@@ -1,0 +1,19 @@
+package admin
+
+import (
+	"github.com/valyala/fasthttp"
+)
+
+// AdminDashboard serves the admin panel
+func AdminDashboard(ctx *fasthttp.RequestCtx) {
+	html := `
+		<html>
+		<head><title>Admin Dashboard</title></head>
+		<body>
+			<h1>Load Balancer Dashboard</h1>
+			<p>Status: Running</p>
+		</body>
+		</html>`
+	ctx.SetContentType("text/html")
+	ctx.SetBody([]byte(html))
+}

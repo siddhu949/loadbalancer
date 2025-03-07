@@ -2,26 +2,37 @@ package main
 
 import (
 	"fmt"
-	"net"
+	"log"
+	"net/http"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+)
+
+// Define Prometheus Metrics
+var (
+	requestsTotal = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "backend_requests_total",
+			Help: "Total number of requests received by backend",
+		})
 )
 
 func main() {
-	listener, err := net.Listen("tcp", "127.0.0.1:9002")
-	if err != nil {
-		fmt.Println("Error starting Backend 2:", err)
-		return
-	}
-	defer listener.Close()
+	// Register Prometheus metrics
+	prometheus.MustRegister(requestsTotal)
 
-	fmt.Println("Backend Server 2 running on 9002")
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			fmt.Println("Connection error:", err)
-			continue
-		}
-		fmt.Println("Request received on Backend 2")
-		conn.Write([]byte("Response from Backend 2\n"))
-		conn.Close()
-	}
+	// HTTP Handler for backend response
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		requestsTotal.Inc()
+		fmt.Fprintln(w, "Success (Response from Backend 2)")
+	})
+
+	// ✅ Expose Prometheus Metrics at /metrics
+	http.Handle("/metrics", promhttp.Handler())
+
+	// Start Backend Server
+	port := "9002" // Change this for backend1 (9001) and backend3 (9003)
+	fmt.Println("Backend running on port:", port)
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }

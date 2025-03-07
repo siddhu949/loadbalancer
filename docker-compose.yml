@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  loadbalancer:
+    build: .
+    ports:
+      - "8080:8080"  # Expose LB on 8080
+      - "9090:9090"  # Prometheus metrics
+    deploy:
+      replicas: 3  # Auto-scales to 3 instances
+      restart_policy:
+        condition: on-failure
+    networks:
+      - mynetwork
+
+  backend1:
+    image: golang:latest
+    command: go run tests/backend1.go  # Runs your backend
+    networks:
+      - mynetwork
+
+  backend2:
+    image: golang:latest
+    command: go run tests/backend2.go
+    networks:
+      - mynetwork
+
+  backend3:
+    image: golang:latest
+    command: go run tests/backend3.go
+    networks:
+      - mynetwork
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - mynetwork
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:
+    driver: bridge
